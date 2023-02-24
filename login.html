@@ -56,6 +56,7 @@
     </body>
 </html>
 <script src="./js/api.js"></script>
+<script src="./js/common.js"></script>
 <script>
     (function () {
         const dom = {
@@ -96,7 +97,7 @@
                             //保存token
                             localStorage.setItem("token", data.token);
                             //跳转页面
-                            location.href = "./index.html";
+                            location.href = baseURL + "index.html";
                         } else {
                             dom.errorId.innerHTML = data.msg;
                             //显示错误信息

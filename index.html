@@ -42,6 +42,7 @@
     </body>
 </html>
 <script src="./js/api.js"></script>
+<script src="./js/common.js"></script>
 <script>
     (async function () {
         function $(selector) {
@@ -71,14 +72,14 @@
         if (!token) {
             //没有token直接重新登录
             alert("请登录");
-            location.href = "./login.html";
+            location.href = baseURL + "login.html";
         }
         //异步判断token状态
         const tokenStatute = await userInfo(token);
         if (tokenStatute.code) {
             //如果有问题
             alert("登录失效，请重新登陆");
-            location.href = "./login.html";
+            location.href = baseURL + "login.html";
         }
         const user = tokenStatute.data;
         //走到这里表示登录信息没有问题，获取user的信息
@@ -117,7 +118,7 @@
         //close事件
         dom.close.addEventListener("click", () => {
             localStorage.removeItem("token");
-            location.href = "./login.html";
+            location.href = baseURL + "login.html";
         });
 
         //发送消息

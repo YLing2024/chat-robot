@@ -79,6 +79,7 @@
     </body>
 </html>
 <script src="./js/api.js"></script>
+<script src="./js/common.js"></script>
 <script>
     (function () {
         function $(selector) {
@@ -160,7 +161,7 @@
                     dom.pwdInput.value.trim(),
                     dom.nickNameInput.value.trim()
                 );
-                location.href = "./login.html";
+                location.href = baseURL + "login.html";
             } else {
                 console.log("失败");
                 return;
