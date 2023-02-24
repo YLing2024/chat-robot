@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>聊天机器人-聊天频道</title>
+        <link
+            rel="shortcut icon"
+            href="./asset/favicon.ico"
+            type="image/x-icon"
+        />
+        <link rel="stylesheet" href="./css/common.css" />
+        <link rel="stylesheet" href="./css/index.css" />
+    </head>
+    <body>
+        <div class="container">
+            <div class="main">
+                <h1 class="main-title">
+                    <img src="./asset/robot.png" alt="" />
+                    AI 聊天机器人
+                </h1>
+                <div class="chat-container"></div>
+                <form class="msg-container">
+                    <input
+                        type="text"
+                        id="txtMsg"
+                        placeholder="在这里输入要发送的消息，按回车键即可发送"
+                    />
+                    <button>发送</button>
+                </form>
+            </div>
+            <div class="aside">
+                <img src="./asset/avatar.png" class="aside-avatar" alt="" />
+                <p id="nickname" class="aside-name"></p>
+                <p id="loginId" class="aside-account"></p>
+            </div>
+            <div class="close">
+                <i class="iconfont icon-close"></i>
+            </div>
+        </div>
+    </body>
+</html>
+<script src="./js/api.js"></script>
+<script>
+    (async function () {
+        function $(selector) {
+            return document.querySelector(selector);
+        }
+        function formatDate(str) {
+            const date = new Date(str);
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const day = date.getDate();
+            const hour = date.getHours();
+            const min = date.getMinutes();
+            const sec = date.getSeconds();
+            return `${year}-${month}-${day} ${hour}:${min}:${sec}`;
+        }
+        const token = localStorage.getItem("token");
+
+        const dom = {
+            nickName: $("#nickname"),
+            loginId: $("#loginId"),
+            form: $(".msg-container"),
+            messageList: $(".chat-container"),
+            input: $("#txtMsg"),
+            close: $(".close"),
+        };
+        //获取登录的信息
+        if (!token) {
+            //没有token直接重新登录
+            alert("请登录");
+            location.href = "./login.html";
+        }
+        //异步判断token状态
+        const tokenStatute = await userInfo(token);
+        if (tokenStatute.code) {
+            //如果有问题
+            alert("登录失效，请重新登陆");
+            location.href = "./login.html";
+        }
+        const user = tokenStatute.data;
+        //走到这里表示登录信息没有问题，获取user的信息
+        dom.nickName.innerText = user.nickname;
+        dom.loginId.innerHTML = user.loginId;
+        //初始化聊天信息
+        const chatHistory = await history(token);
+        const historyDoms = chatHistory.data
+            .map((item) => {
+                //获取消息列表
+                const sent = item.from === user.loginId ? "me" : ""; //是否是自己发的
+                const img =
+                    item.from === user.loginId
+                        ? "./asset/avatar.png"
+                        : "./asset/robot-avatar.jpg";
+
+                //格式化时间
+                return `<div class="chat-item ${sent}">
+                        <img class="chat-avatar" src="${img}" />
+                        <div class="chat-content">${item.content}</div>
+                        <div class="chat-date">${formatDate(
+                            item.createdAt
+                        )}</div>
+                    </div>`;
+            })
+            .join("");
+
+        // console.log(doms);
+        dom.messageList.innerHTML = historyDoms; //修改历史消息
+
+        dom.messageList.scrollTo(
+            0,
+            dom.messageList.scrollHeight - dom.messageList.clientHeight
+        ); //移动到尾部
+
+        //close事件
+        dom.close.addEventListener("click", () => {
+            localStorage.removeItem("token");
+            location.href = "./login.html";
+        });
+
+        //发送消息
+        // console.log(dom.form);
+        dom.form.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            //保存value
+            const value = dom.input.value;
+            if (value.trim() === "") {
+                return;
+            }
+            //清空元素
+            dom.input.value = "";
+            //插入元素
+            dom.messageList.innerHTML += `<div class="chat-item me">
+                        <img class="chat-avatar" src="./asset/avatar.png" />
+                        <div class="chat-content">${value}</div>
+                        <div class="chat-date">${formatDate(Date.now())}</div>
+                    </div>`;
+            // console.log(dom.input.value);
+            //跳转到最后
+            dom.messageList.scrollTo(
+                0,
+                dom.messageList.scrollHeight - dom.messageList.clientHeight
+            );
+            const data = await sendMsg(token, value);
+            dom.messageList.innerHTML += `<div class="chat-item">
+                        <img class="chat-avatar" src="./asset/robot-avatar.jpg" />
+                        <div class="chat-content">${data.data.content}</div>
+                        <div class="chat-date">${formatDate(
+                            data.data.createdAt
+                        )}</div>
+                    </div>`;
+            dom.messageList.scrollTo(
+                0,
+                dom.messageList.scrollHeight - dom.messageList.clientHeight
+            );
+        });
+    })();
+</script>
